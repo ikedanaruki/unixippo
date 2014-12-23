@@ -1,0 +1,95 @@
+#! /usr/bin/perl
+use File::Spec;
+use File::Basename;
+$p = `pwd`;
+chomp $p;
+$p =  File::Spec->rel2abs($0,$p);
+chdir(dirname($p) . '/..');
+$p = `pwd`;
+chomp $p;
+print "$p\n";
+
+print "##### cd dojo #####\n";
+
+$start_dir="/Users/naruki/Desktop/UNIXIPPO";
+#$dest_dir="/Users/naruki/Desktop/UNIXIPPO/bin";
+# input file
+open(IN,"$p/bin/question.txt");
+@q=<IN>;
+close(IN);
+$flag=0;
+$old_cd="";
+while(true) {
+    if($flag ==0) {
+	print "### new question ###\n";
+	$index=int(rand($#q+1));
+	$dest_dir=@q[$index];
+	chomp $dest_dir;
+    }
+    $cd = `pwd`;
+    print "please go to /$dest_dir\n";
+    #print "current directory is $cd\n";
+    while(true) {
+	print "\$ ";
+	$command = <STDIN>;
+	chomp $command;
+	#print "c is $command\n";
+	if($command  =~ /^cd +/) {
+	    $command =~ s/^cd +//;
+	    if($command =~ /^\//) {
+		print "Don't use a absolute(ZETTAI) path. use a relative(SOTAI) path.\n";
+		next;
+	    }
+	    $old_cd=`pwd`;
+	    chomp $old_cd;
+	    if(!chdir($command)) {
+		print"failed to change the directory!!!\n";
+		next;
+	    }
+	    $cd= `pwd`;
+	    chomp $cd;
+	    if(length($p) > length($cd)) {
+		$p_cd = $p;
+	    }
+	    else {
+            	$p_cd = $cd;
+            }
+            $p_cd =~ s/^$p\/?//;
+            
+	    print "Now current directory is /$p_cd\n";
+	    last;
+	}
+	if($command =~ /^pwd *$/) {
+	    $a = `pwd`;
+	    chomp $a;
+            $a =~ s/^$p\/?//;
+	    print "/$a\n";
+	    next;
+	}
+	if($command =~ /^ls ?/) {
+	    system($command);
+	    next;
+	}
+	if($command eq "q") {
+	    print "please go to $dest_dir\n";
+	    next;
+	}
+	if($command eq "exit") {
+	    exit(0);
+	}
+	
+	print "input command is error!!\n";
+    }
+#print "$cd@\n";
+$d = File::Spec->rel2abs($dest_dir,$p);
+#print "$d@\n";
+    if($cd eq $d) {
+	print"Good!!!\n";
+	$flag=0;
+    }
+    else {
+	print"Bad!!\n";
+	chdir($old_cd);
+	$flag=1;
+    }
+}
